@@ -1,2 +1,3 @@
 *.sh text eol=lf
+*.patch text eol=lf
 scripts/msys2_deps.txt text eol=lf
