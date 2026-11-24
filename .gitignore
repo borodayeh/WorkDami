@@ -1,0 +1,4 @@
+core/build/
+core/build-cmake/
+*.tmp
+maksa_settings.txt

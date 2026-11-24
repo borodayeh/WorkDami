@@ -1,0 +1,83 @@
+== build stage 1 tests ==
+== build stage 2 tests ==
+== build demos ==
+== run stage 1 tests ==
+[PASS] catalog loads usable test fixtures
+[PASS] catalog records warnings instead of aborting
+[PASS] incomplete row is skipped
+[PASS] missing media is flagged but the record survives
+[PASS] unknown/unreviewed content is not approved by default
+[PASS] provisional display name lives in one central header
+[PASS] draft exercises never enter normal selection
+[PASS] planner fills the time with more than one movement
+[PASS] planner never exceeds available time
+[PASS] multiple selected body regions are combined
+[PASS] whole-body mode diversifies across regions
+[PASS] floor and equipment movements are excluded by default constraints
+[PASS] favourites cannot bypass equipment or position constraints
+[PASS] recently shown movements are deprioritised
+[PASS] a movement that does not fit is skipped, not shortened
+[PASS] hiding all candidates produces an explicit reason
+[PASS] session starts Idle
+[PASS] Start -> Preparing
+[PASS] Ready -> Playing
+[PASS] Pause -> Paused
+[PASS] Resume -> Playing
+[PASS] reopening the card does not create or reset a session
+[PASS] Next -> Transitioning
+[PASS] Ready advances the movement index
+[PASS] Skip advances to the next movement
+[PASS] Next on the last movement completes the session
+[PASS] illegal transitions are rejected
+[PASS] Cancel ends the session
+
+ALL TESTS PASSED
+== run stage 2 tests ==
+[PASS] settings save succeeds
+[PASS] settings reload succeeds
+[PASS] round-trip preserves all required settings
+[PASS] missing settings file yields defaults with a warning
+[PASS] corrupt value is reported; valid fields are still loaded
+[PASS] unknown key and unknown value are both reported
+[PASS] failed save returns false with an error
+[PASS] old settings survive a failed save
+[PASS] select-all-regions and whole-body mode remain distinct
+[PASS] no selected region produces an explicit reason
+[PASS] no movement matching the conditions produces an explicit reason
+[PASS] all suitable movements hidden produces an explicit reason
+[PASS] movement that does not fit is skipped without shortening
+[PASS] whole-body mode with limited data still diversifies
+[PASS] break start creates one presentation
+[PASS] duplicate break start does not create a second session
+[PASS] long system gap grants no elapsed or confirmed credit
+[PASS] pausing a movement is reflected in the presentation
+[PASS] cancel while paused clears the exercise session
+[PASS] end of break clears the exercise session
+[PASS] e2e: settings saved
+[PASS] e2e: selections recovered after close/reopen
+[PASS] e2e: break start shows a movement from the plan
+[PASS] e2e: pause and resume work
+[PASS] e2e: skipping does not count as confirmed
+[PASS] e2e: break end clears the session
+[PASS] adapter: fixture exists
+[PASS] adapter: Persian localized title is used
+[PASS] adapter: duration and bilateral steps are preserved
+[PASS] adapter: fields unknown to Exercise are reported, not silently dropped
+
+ALL STAGE 2 TESTS PASSED
+== run plan demo ==
+Product (provisional): مکثا / Maksa
+Fixture file: /home/user/workledge/core/data/test_exercises.tsv
+Records loaded: 12 | warnings: 2
+Planned routine (51s):
+  1. رها کردن گردن (آزمایشی) [test_bad_media] 12s (transition 2s)
+  2. خم کردن گردن (آزمایشی) [test_neck_tilt] 12s (transition 2s)
+  3. چرخش شانه (آزمایشی) [test_shoulder_roll] 9s (transition 1s)
+  4. کشش مچ (آزمایشی) [test_wrist_stretch] 18s (transition 2s)
+Session state: Preparing
+== run end-to-end (non-GUI) demo ==
+1) selected regions restored: 2
+2) plan size: 3 (33s)
+3) showing: رها کردن گردن (آزمایشی) [1/3]
+4) paused: yes
+5) after break end: active=0 presentation=none

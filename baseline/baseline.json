@@ -1,0 +1,30 @@
+{
+  "generated_utc": "2026-11-24T06:59:13.188329+00:00",
+  "baseline_file": "/home/user/workledge/baseline/manifest.sha256",
+  "baseline_sha256": "006cd007170eff5f29904b69e84fe31a2808a88751884db37128b400d59ec31c",
+  "tools": {
+    "cmake": "MISSING",
+    "qmake6": "MISSING",
+    "swift": "MISSING",
+    "ninja": "MISSING",
+    "g++": "g++ (Debian 14.2.0-19) 14.2.0",
+    "python3": "Python 3.13.18"
+  },
+  "repos": {
+    "workrave": {
+      "remote_url": "https://github.com/rcaelers/workrave.git",
+      "status_porcelain_lines": 27,
+      "head": "fatal: your current branch 'main' does not have any commits yet"
+    },
+    "dynamic_ledge": {
+      "remote_url": "https://github.com/shandilyaswagat/dynamic_ledge.git",
+      "head": "9c5dd4d Dynamic Ledge 1.5.0",
+      "status_porcelain_lines": 0
+    }
+  },
+  "file_counts": {
+    "workrave": 1625,
+    "dynamic_ledge": 195,
+    "workledge": 7
+  }
+}

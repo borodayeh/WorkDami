@@ -1,0 +1,43 @@
+{
+  "os": "Debian GNU/Linux 13 (trixie)",
+  "kernel": "Linux e2b.local 6.1.189 x86_64",
+  "architecture": "amd64",
+  "windows_msys2_access": false,
+  "cross_compiler_access": false,
+  "gui_display_available": false,
+  "display_env": {
+    "DISPLAY": "unset",
+    "WAYLAND_DISPLAY": "unset",
+    "XDG_SESSION_TYPE": "unset"
+  },
+  "installed_tools": {
+    "g++": "14.2.0 (Debian 14.2.0-19)",
+    "python3": "3.13.18"
+  },
+  "missing_tools": ["cmake", "qmake6", "qmake", "swift", "ninja", "pacman", "msys2", "wine", "x86_64-w64-mingw32-g++", "Xvfb"],
+  "apt_candidates": {
+    "cmake": "3.31.6-2",
+    "ninja-build": "1.12.1-1",
+    "qt6-base-dev": "6.8.2+dfsg-9+deb13u2",
+    "qt6-declarative-dev": "6.8.2+dfsg-7",
+    "qt6-tools-dev": "6.8.2-5",
+    "libboost-all-dev": "1.83.0.2+b2",
+    "note": "Boost apt candidate 1.83 is below the 1.86+ requirement in workrave/vcpkg.json"
+  },
+  "install_simulation": {
+    "packages": 285,
+    "download_mb": 184,
+    "installed_mb": 1085,
+    "install_path": "/usr (apt default)",
+    "build_path_proposed": "/tmp/workrave-qt",
+    "workspace_snapshot_impact": "none if build stays in /tmp",
+    "workspace_current": "80 MB / 1949 files, cap ~128 MB / 10000 files"
+  },
+  "permission_decision": "NO_INSTALL — user declined the exact Linux apt install plan",
+  "first_blocker": "cmake: command not found (exit 127); no native Windows/MSYS2 path exists",
+  "paths_are_distinct": {
+    "linux_build": "possible only after approved install; unverified",
+    "native_windows_msys2": "not accessible in this sandbox",
+    "cross_compile": "not accessible in this sandbox"
+  }
+}

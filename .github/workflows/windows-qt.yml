@@ -1,0 +1,116 @@
+name: Windows Qt build (TEST FIXTURE, UNVERIFIED)
+
+# Manual only. No release, no signing, no push, no external repository creation.
+# Toolchain: MSYS2 CLANG64 only. No MSVC / MINGW / CLANG64 mixing.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: windows x64 / CLANG64 / Qt6
+    runs-on: windows-latest
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+
+      - name: Setup MSYS2 CLANG64
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: CLANG64
+          update: true
+          install: git
+
+      - name: Install pinned CLANG64 dependencies
+        shell: msys2 {0}
+        run: |
+          set -o pipefail
+          mkdir -p _logs
+          pacman -S --noconfirm --needed $(cat scripts/msys2_deps.txt) 2>&1 | tee _logs/00-pacman.log
+
+      - name: Record versions and pins
+        shell: msys2 {0}
+        run: |
+          set -o pipefail
+          {
+            echo "runner: windows-latest / MSYSTEM=${MSYSTEM:-unset}"
+            echo "this repo: $(git rev-parse HEAD)"
+            echo "--- clang ---"; clang++ --version
+            echo "--- cmake ---"; cmake --version
+            echo "--- qmake ---"; qmake6 -v || true
+            echo "--- upstream pin ---"; cat upstream/workrave.txt
+          } 2>&1 | tee _logs/01-versions.log
+
+      # Stage 0: exact upstream source, unmodified.
+      - name: Fetch pinned Workrave source
+        shell: msys2 {0}
+        run: |
+          set -o pipefail
+          bash scripts/fetch_upstream.sh "$PWD/upstream/workrave" 2>&1 | tee _logs/02-fetch-upstream.log
+
+      # Stage 1: base build, no Maksa changes applied.
+      - name: Build unmodified Workrave with Qt
+        shell: msys2 {0}
+        run: |
+          set -o pipefail
+          bash scripts/msys2_build.sh "$PWD/upstream/workrave" "$PWD/build/base" 2>&1 | tee _logs/03-base-build.log
+
+      # Stage 2: independent core tests on Windows.
+      - name: Run independent core tests
+        shell: msys2 {0}
+        run: |
+          set -o pipefail
+          bash scripts/run_core_tests.sh "$PWD/build/core" 2>&1 | tee _logs/04-core-tests.log
+
+      # Stage 3: apply our versioned changes.
+      - name: Apply Maksa integration patch
+        shell: msys2 {0}
+        run: |
+          set -o pipefail
+          bash scripts/apply_integration.sh "$PWD/upstream/workrave" 2>&1 | tee _logs/05-apply-patch.log
+
+      # Stage 4: compile the real bridge and config backend inside Workrave.
+      - name: Build patched Workrave
+        shell: msys2 {0}
+        run: |
+          set -o pipefail
+          bash scripts/msys2_build.sh "$PWD/upstream/workrave" "$PWD/build/patched" 2>&1 | tee _logs/06-patched-build.log
+
+      # Stage 5: test-fixture portable bundle, not an installer.
+      - name: Package test artifact
+        shell: msys2 {0}
+        run: |
+          set -o pipefail
+          bash scripts/package_windows.sh \
+            "$PWD/build/patched" \
+            "$PWD/artifacts/maksa-test-fixture" \
+            "$PWD/upstream/workrave" 2>&1 | tee _logs/07-package.log
+
+      - name: Reject empty or incomplete artifact
+        shell: msys2 {0}
+        run: |
+          set -euo pipefail
+          A="artifacts/maksa-test-fixture"
+          [ -s "$A/workrave.exe" ] || { echo "missing workrave.exe" >&2; exit 1; }
+          [ -s "$A/maksa/test_exercises.tsv" ] || { echo "missing fixture data" >&2; exit 1; }
+          [ -s "$A/README-TEST.txt" ] || { echo "missing test notice" >&2; exit 1; }
+          [ -s "$A/THIRD_PARTY.md" ] || { echo "missing attribution" >&2; exit 1; }
+          echo "artifact completeness check passed"
+
+      - name: Upload build and test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maksa-logs-${{ github.run_number }}
+          path: _logs
+          if-no-files-found: warn
+
+      - name: Upload test artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maksa-test-fixture-x64-${{ github.run_number }}
+          path: artifacts/maksa-test-fixture
+          if-no-files-found: error

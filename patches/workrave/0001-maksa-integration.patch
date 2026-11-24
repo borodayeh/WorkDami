@@ -1,0 +1,341 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1433,6 +1433,7 @@
+ 
+ add_subdirectory(po)
+ add_subdirectory(libs)
++add_subdirectory(maksa)
+ add_subdirectory(ui)
+ 
+ #----------------------------------------------------------------------------------------------------
+--- a/ui/app/CMakeLists.txt
++++ b/ui/app/CMakeLists.txt
+@@ -326,6 +326,10 @@
+   target_link_libraries(workrave PRIVATE workrave-toolkit-qt)
+   target_sources(workrave PRIVATE $<TARGET_OBJECTS:workrave-toolkit-qt>)
+ endif()
++target_include_directories(workrave PRIVATE
++  ${CMAKE_SOURCE_DIR}/maksa/core
++  ${CMAKE_SOURCE_DIR}/maksa/integration)
++target_link_libraries(workrave PRIVATE maksa_bridge)
+ 
+ If (PLATFORM_OS_WINDOWS)
+   set(WR_VERSION ${WORKRAVE_VERSION})
+--- a/ui/app/toolkits/qt/Toolkit.hh
++++ b/ui/app/toolkits/qt/Toolkit.hh
+@@ -36,6 +36,7 @@
+ #include "QmlPrefsDialog.hh"
+ #include "QmlStatisticsDialog.hh"
+ #include "StatusIcon.hh"
++#include "MaksaBridge.hh"
+ 
+ #include "core/CoreTypes.hh"
+ #include "ui/GUIConfig.hh"
+@@ -125,6 +126,7 @@
+   QPointer<DebugDialog> debug_dialog;
+   std::unique_ptr<QmlExercisesDialog> exercises_dialog;
+   std::unique_ptr<StatusIcon> status_icon;
++  std::unique_ptr<MaksaBridge> maksa_bridge;
+   int hold_count{0};
+ 
+   QTimer *heartbeat_timer{nullptr};
+--- a/ui/app/toolkits/qt/Toolkit.cc
++++ b/ui/app/toolkits/qt/Toolkit.cc
+@@ -20,6 +20,7 @@
+ #endif
+ 
+ #include "Toolkit.hh"
++#include "MaksaBridge.hh"
+ 
+ #include <QApplication>
+ #include <QDir>
+@@ -83,6 +84,20 @@
+     on_status_icon_balloon_activated(id);
+   });
+ 
++  maksa_bridge = std::make_unique<MaksaBridge>(app, this);
++  for (int i = 0; i < workrave::BREAK_ID_SIZEOF; ++i)
++    {
++      auto brk = app->get_core()->get_break(static_cast<workrave::BreakId>(i));
++      if (brk)
++        {
++          workrave::utils::connect(brk->signal_break_event(), tracker,
++                                   [this, i](auto event) {
++                                     maksa_bridge->onBreakEvent(i, static_cast<int>(event));
++                                   });
++        }
++    }
++  maksa_bridge->show();
++
+   connect(heartbeat_timer, SIGNAL(timeout()), this, SLOT(on_timer()));
+   heartbeat_timer->start(1000);
+ }
+@@ -90,6 +105,7 @@
+ void
+ Toolkit::deinit()
+ {
++  maksa_bridge.reset();
+   get_locker()->unlock();
+ }
+ 
+--- a/ui/app/toolkits/qt/qml/sanctuary.qrc
++++ b/ui/app/toolkits/qt/qml/sanctuary.qrc
+@@ -25,6 +25,7 @@
+         <file>RestBreakOverlay.qml</file>
+         <file>RestBreakShell.qml</file>
+         <file>StatusWindow.qml</file>
++        <file alias="MaksaHud.qml">../../../../../maksa/qml/MaksaHud.qml</file>
+         <file>ClassicSysOperMenu.qml</file>
+         <file>ConfirmDialog.qml</file>
+         <file>PrefTokens.qml</file>
+--- a/maksa/CMakeLists.txt
++++ b/maksa/CMakeLists.txt
+@@ -0,0 +1,26 @@
++# Added by the Maksa integration patch. Requires WITH_UI=Qt.
++add_library(maksa_core STATIC
++  core/exercise_catalog.cc
++  core/routine_planner.cc
++  core/exercise_session.cc
++  core/settings.cc
++  core/exercise_view_adapter.cc
++  core/coordinator.cc)
++target_include_directories(maksa_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/core)
++
++add_library(maksa_bridge STATIC
++  integration/workrave_exercise_bridge.cc
++  integration/workrave_config_store.cc
++  integration/MaksaBridge.h
++  integration/MaksaBridge.cc)
++target_include_directories(maksa_bridge PUBLIC
++  ${CMAKE_CURRENT_SOURCE_DIR}/core
++  ${CMAKE_CURRENT_SOURCE_DIR}/integration
++  ${CMAKE_SOURCE_DIR}/ui/libs/commonui/include
++  ${CMAKE_SOURCE_DIR}/libs/config/include)
++target_link_libraries(maksa_bridge PUBLIC
++  maksa_core
++  Qt6::Core
++  Qt6::Qml
++  Qt6::Quick)
++set_target_properties(maksa_bridge PROPERTIES AUTOMOC ON)
+--- a/maksa/integration/MaksaBridge.cc
++++ b/maksa/integration/MaksaBridge.cc
+@@ -0,0 +1,108 @@
++#include "MaksaBridge.h"
++
++#include <QCoreApplication>
++#include <QDir>
++#include <QQuickView>
++#include <QQmlContext>
++#include <QUrl>
++
++#include <memory>
++
++using namespace workledge::core;
++
++MaksaBridge::MaksaBridge(std::shared_ptr<IApplicationContext> app, QObject *parent)
++  : QObject(parent)
++{
++  clock_.start();
++
++  store_ = std::make_unique<workledge::integration::WorkraveConfigStore>(app->get_configurator());
++  std::vector<std::string> warnings;
++  store_->load(settings_, warnings);
++
++  catalog_ = std::make_unique<ExerciseCatalog>();
++  const auto fixture = QDir(QCoreApplication::applicationDirPath()).filePath("maksa/test_exercises.tsv");
++  catalog_->load_tsv(fixture.toStdString());
++
++  plan_ = plan_routine(*catalog_, to_planner_input(settings_, 60));
++  coordinator_ = std::make_unique<BreakExerciseCoordinator>(*catalog_);
++  coordinator_->set_plan(plan_);
++}
++
++void
++MaksaBridge::show()
++{
++  if (view_) return;
++  view_ = std::make_unique<QQuickView>();
++  view_->rootContext()->setContextProperty("maksaBridge", this);
++  view_->setResizeMode(QQuickView::SizeRootObjectToView);
++  view_->resize(340, 120);
++  view_->setSource(QUrl("qrc:/sanctuary/MaksaHud.qml"));
++  view_->show();
++}
++
++void
++MaksaBridge::onBreakEvent(int, int event)
++{
++  // Values from workrave/libs/core/src/gen/RpcBreakTypes.proto:
++  // SHOW_BREAK=1, SHOW_BREAK_FORCED=2 -> start; BREAK_STOP=5,
++  // BREAK_TAKEN=9, BREAK_SKIPPED=8 -> end.
++  const int now = static_cast<int>(clock_.elapsed() / 1000);
++  if (event == 1 || event == 2)
++    {
++      coordinator_->on_break_signal(BreakSignal::ShowBreak, 1, now);
++    }
++  else if (event == 5 || event == 8 || event == 9)
++    {
++      coordinator_->on_break_signal(BreakSignal::BreakTaken, 1, now);
++    }
++  refresh();
++}
++
++QString
++MaksaBridge::title() const
++{
++  const auto *p = coordinator_->presentation();
++  return p == nullptr ? QStringLiteral("TEST FIXTURE — no active session")
++                      : QString::fromStdString(p->title);
++}
++
++QString
++MaksaBridge::step() const
++{
++  const auto *p = coordinator_->presentation();
++  if (p == nullptr) return QStringLiteral("0/0");
++  return QString("%1/%2").arg(p->step_index).arg(p->total_steps);
++}
++
++QString
++MaksaBridge::state() const
++{
++  return QString::fromStdString(to_string(coordinator_->state()));
++}
++
++void
++MaksaBridge::refresh()
++{
++  emit changed();
++}
++
++void
++MaksaBridge::pause()
++{
++  coordinator_->command(ExerciseCommand::Pause, static_cast<int>(clock_.elapsed() / 1000));
++  refresh();
++}
++
++void
++MaksaBridge::resume()
++{
++  coordinator_->command(ExerciseCommand::Resume, static_cast<int>(clock_.elapsed() / 1000));
++  refresh();
++}
++
++void
++MaksaBridge::skip()
++{
++  coordinator_->command(ExerciseCommand::Skip, static_cast<int>(clock_.elapsed() / 1000));
++  refresh();
++}
+--- a/maksa/integration/MaksaBridge.h
++++ b/maksa/integration/MaksaBridge.h
+@@ -0,0 +1,52 @@
++#pragma once
++
++// UNVERIFIED minimal bridge added by the integration patch.
++// It is compiled only in the patched Workrave Qt build.
++
++#include <QElapsedTimer>
++#include <QObject>
++#include <QString>
++
++#include "coordinator.h"
++#include "exercise_catalog.h"
++#include "routine_planner.h"
++#include "settings.h"
++#include "workrave_config_store.h"
++
++class QQuickView;
++
++class MaksaBridge : public QObject
++{
++  Q_OBJECT
++  Q_PROPERTY(QString title READ title NOTIFY changed)
++  Q_PROPERTY(QString step READ step NOTIFY changed)
++  Q_PROPERTY(QString state READ state NOTIFY changed)
++
++public:
++  MaksaBridge(std::shared_ptr<IApplicationContext> app, QObject *parent = nullptr);
++  void show();
++  void onBreakEvent(int break_id, int event);
++
++  QString title() const;
++  QString step() const;
++  QString state() const;
++
++public slots:
++  void pause();
++  void resume();
++  void skip();
++
++signals:
++  void changed();
++
++private:
++  void refresh();
++
++  std::unique_ptr<workledge::core::ExerciseCatalog> catalog_;
++  workledge::core::Settings settings_;
++  workledge::core::PlanResult plan_;
++  std::unique_ptr<workledge::core::BreakExerciseCoordinator> coordinator_;
++  std::unique_ptr<workledge::integration::WorkraveConfigStore> store_;
++  std::unique_ptr<QQuickView> view_;
++  QElapsedTimer clock_;
++};
+--- a/maksa/qml/MaksaHud.qml
++++ b/maksa/qml/MaksaHud.qml
+@@ -0,0 +1,53 @@
++// TEST FIXTURE HUD — not release content.
++import QtQuick 2.15
++
++Rectangle {
++    id: root
++    width: 340
++    height: 120
++    radius: 14
++    color: "#20242b"
++    border.color: "#54606d"
++    border.width: 1
++
++    Text {
++        id: titleText
++        anchors { top: parent.top; left: parent.left; margins: 12 }
++        width: parent.width - 24
++        text: maksaBridge != null ? maksaBridge.title : "TEST FIXTURE"
++        color: "#eef2f6"
++        font.pixelSize: 14
++        font.bold: true
++        elide: Text.ElideRight
++    }
++
++    Text {
++        id: stepText
++        anchors { top: titleText.bottom; left: parent.left; leftMargin: 12; topMargin: 6 }
++        text: "step " + (maksaBridge != null ? maksaBridge.step : "0/0")
++              + "  state " + (maksaBridge != null ? maksaBridge.state : "Idle")
++        color: "#9aa6b2"
++        font.pixelSize: 11
++    }
++
++    Row {
++        anchors { bottom: parent.bottom; left: parent.left; margins: 12 }
++        spacing: 6
++        Repeater {
++            model: ["Pause", "Resume", "Skip"]
++            Rectangle {
++                width: 68; height: 26; radius: 7; color: "#35404a"
++                Text { anchors.centerIn: parent; text: modelData; color: "#eef2f6"; font.pixelSize: 11 }
++                MouseArea {
++                    anchors.fill: parent
++                    onClicked: {
++                        if (maksaBridge == null) return;
++                        if (modelData === "Pause") maksaBridge.pause();
++                        else if (modelData === "Resume") maksaBridge.resume();
++                        else maksaBridge.skip();
++                    }
++                }
++            }
++        }
++    }
++}

@@ -1,0 +1,351 @@
+{
+  "source_of_truth_output": "evidence/stage3_corrections_output.txt",
+  "core_files": [
+    "core/CMakeLists.txt",
+    "core/coordinator.cc",
+    "core/coordinator.h",
+    "core/data/test_exercises.tsv",
+    "core/exercise_catalog.cc",
+    "core/exercise_catalog.h",
+    "core/exercise_model.h",
+    "core/exercise_session.cc",
+    "core/exercise_session.h",
+    "core/exercise_view_adapter.cc",
+    "core/exercise_view_adapter.h",
+    "core/product_info.h",
+    "core/routine_planner.cc",
+    "core/routine_planner.h",
+    "core/run_tests.sh",
+    "core/settings.cc",
+    "core/settings.h",
+    "core/tests/run_stage2_tests.cc",
+    "core/tests/run_tests.cc",
+    "core/tools/e2e_demo.cc",
+    "core/tools/plan_demo.cc",
+    "core/workrave_config_backend.h"
+  ],
+  "unverified_integration_files": [
+    "integration/README.md",
+    "integration/workrave_config_store.cc",
+    "integration/workrave_config_store.h",
+    "integration/workrave_exercise_bridge.cc",
+    "integration/workrave_exercise_bridge.h"
+  ],
+  "compile_commands": {
+    "stage1_tests": "g++ -std=c++17 -Wall -Wextra -pedantic -I/home/user/workledge/core /home/user/workledge/core/exercise_catalog.cc /home/user/workledge/core/routine_planner.cc /home/user/workledge/core/exercise_session.cc /home/user/workledge/core/settings.cc /home/user/workledge/core/exercise_view_adapter.cc /home/user/workledge/core/coordinator.cc /home/user/workledge/core/tests/run_tests.cc -o /home/user/workledge/core/build/maksa_core_tests",
+    "stage2_tests": "g++ -std=c++17 -Wall -Wextra -pedantic -I/home/user/workledge/core /home/user/workledge/core/exercise_catalog.cc /home/user/workledge/core/routine_planner.cc /home/user/workledge/core/exercise_session.cc /home/user/workledge/core/settings.cc /home/user/workledge/core/exercise_view_adapter.cc /home/user/workledge/core/coordinator.cc /home/user/workledge/core/tests/run_stage2_tests.cc -o /home/user/workledge/core/build/maksa_stage2_tests"
+  },
+  "run_command": "/home/user/workledge/core/run_tests.sh",
+  "stage1": {
+    "count": 28,
+    "passed": 28,
+    "scenarios": [
+      {
+        "name": "catalog loads usable test fixtures",
+        "result": "PASS"
+      },
+      {
+        "name": "catalog records warnings instead of aborting",
+        "result": "PASS"
+      },
+      {
+        "name": "incomplete row is skipped",
+        "result": "PASS"
+      },
+      {
+        "name": "missing media is flagged but the record survives",
+        "result": "PASS"
+      },
+      {
+        "name": "unknown/unreviewed content is not approved by default",
+        "result": "PASS"
+      },
+      {
+        "name": "provisional display name lives in one central header",
+        "result": "PASS"
+      },
+      {
+        "name": "draft exercises never enter normal selection",
+        "result": "PASS"
+      },
+      {
+        "name": "planner fills the time with more than one movement",
+        "result": "PASS"
+      },
+      {
+        "name": "planner never exceeds available time",
+        "result": "PASS"
+      },
+      {
+        "name": "multiple selected body regions are combined",
+        "result": "PASS"
+      },
+      {
+        "name": "whole-body mode diversifies across regions",
+        "result": "PASS"
+      },
+      {
+        "name": "floor and equipment movements are excluded by default constraints",
+        "result": "PASS"
+      },
+      {
+        "name": "favourites cannot bypass equipment or position constraints",
+        "result": "PASS"
+      },
+      {
+        "name": "recently shown movements are deprioritised",
+        "result": "PASS"
+      },
+      {
+        "name": "a movement that does not fit is skipped, not shortened",
+        "result": "PASS"
+      },
+      {
+        "name": "hiding all candidates produces an explicit reason",
+        "result": "PASS"
+      },
+      {
+        "name": "session starts Idle",
+        "result": "PASS"
+      },
+      {
+        "name": "Start -> Preparing",
+        "result": "PASS"
+      },
+      {
+        "name": "Ready -> Playing",
+        "result": "PASS"
+      },
+      {
+        "name": "Pause -> Paused",
+        "result": "PASS"
+      },
+      {
+        "name": "Resume -> Playing",
+        "result": "PASS"
+      },
+      {
+        "name": "reopening the card does not create or reset a session",
+        "result": "PASS"
+      },
+      {
+        "name": "Next -> Transitioning",
+        "result": "PASS"
+      },
+      {
+        "name": "Ready advances the movement index",
+        "result": "PASS"
+      },
+      {
+        "name": "Skip advances to the next movement",
+        "result": "PASS"
+      },
+      {
+        "name": "Next on the last movement completes the session",
+        "result": "PASS"
+      },
+      {
+        "name": "illegal transitions are rejected",
+        "result": "PASS"
+      },
+      {
+        "name": "Cancel ends the session",
+        "result": "PASS"
+      }
+    ]
+  },
+  "stage2": {
+    "count": 42,
+    "passed": 42,
+    "scenarios": [
+      {
+        "name": "settings save succeeds",
+        "result": "PASS"
+      },
+      {
+        "name": "settings reload succeeds",
+        "result": "PASS"
+      },
+      {
+        "name": "round-trip preserves all required settings",
+        "result": "PASS"
+      },
+      {
+        "name": "missing settings file yields defaults with a warning",
+        "result": "PASS"
+      },
+      {
+        "name": "corrupt value is reported; valid fields are still loaded",
+        "result": "PASS"
+      },
+      {
+        "name": "unknown key and unknown value are both reported",
+        "result": "PASS"
+      },
+      {
+        "name": "failed save returns false with an error",
+        "result": "PASS"
+      },
+      {
+        "name": "old settings survive a failed save",
+        "result": "PASS"
+      },
+      {
+        "name": "select-all-regions and whole-body mode remain distinct",
+        "result": "PASS"
+      },
+      {
+        "name": "no selected region produces an explicit reason",
+        "result": "PASS"
+      },
+      {
+        "name": "no movement matching the conditions produces an explicit reason",
+        "result": "PASS"
+      },
+      {
+        "name": "all suitable movements hidden produces an explicit reason",
+        "result": "PASS"
+      },
+      {
+        "name": "movement that does not fit is skipped without shortening",
+        "result": "PASS"
+      },
+      {
+        "name": "whole-body mode with limited data still diversifies",
+        "result": "PASS"
+      },
+      {
+        "name": "break start creates one presentation",
+        "result": "PASS"
+      },
+      {
+        "name": "duplicate break start does not create a second session",
+        "result": "PASS"
+      },
+      {
+        "name": "short event-loop delay keeps playing and still counts real seconds",
+        "result": "PASS"
+      },
+      {
+        "name": "monotonic accounting ignores a backwards clock change",
+        "result": "PASS"
+      },
+      {
+        "name": "long suspend pauses the session and grants no elapsed/confirmed credit",
+        "result": "PASS"
+      },
+      {
+        "name": "resume after suspend is explicit",
+        "result": "PASS"
+      },
+      {
+        "name": "time accounting resumes only after explicit Resume",
+        "result": "PASS"
+      },
+      {
+        "name": "pausing a movement is reflected in the presentation",
+        "result": "PASS"
+      },
+      {
+        "name": "resume while already paused stays paused and grants no credit",
+        "result": "PASS"
+      },
+      {
+        "name": "closing the card is not an end-of-session command",
+        "result": "PASS"
+      },
+      {
+        "name": "cancel while paused clears the exercise session even if UI was inactive",
+        "result": "PASS"
+      },
+      {
+        "name": "end of break clears the exercise session",
+        "result": "PASS"
+      },
+      {
+        "name": "e2e: settings saved",
+        "result": "PASS"
+      },
+      {
+        "name": "e2e: selections recovered after close/reopen",
+        "result": "PASS"
+      },
+      {
+        "name": "e2e: break start shows a movement from the plan",
+        "result": "PASS"
+      },
+      {
+        "name": "e2e: pause and resume work",
+        "result": "PASS"
+      },
+      {
+        "name": "e2e: skipping does not count as confirmed",
+        "result": "PASS"
+      },
+      {
+        "name": "e2e: break end clears the session",
+        "result": "PASS"
+      },
+      {
+        "name": "dto: fixture exists",
+        "result": "PASS"
+      },
+      {
+        "name": "dto: Persian localized title is used",
+        "result": "PASS"
+      },
+      {
+        "name": "dto: duration and explicit side steps are preserved",
+        "result": "PASS"
+      },
+      {
+        "name": "dto: bilateral timing does not imply media mirroring",
+        "result": "PASS"
+      },
+      {
+        "name": "dto: original record keeps licence, attribution and review status alive",
+        "result": "PASS"
+      },
+      {
+        "name": "dto: fields unknown to Exercise are reported, not silently dropped",
+        "result": "PASS"
+      },
+      {
+        "name": "dto: shoulder fixture exists",
+        "result": "PASS"
+      },
+      {
+        "name": "dto: mirroring and second-side text require explicit data",
+        "result": "PASS"
+      },
+      {
+        "name": "dto: wrist fixture exists",
+        "result": "PASS"
+      },
+      {
+        "name": "dto: bilateral flag with no side data is not guessed",
+        "result": "PASS"
+      }
+    ]
+  },
+  "demo_paths": {
+    "plan_demo": "test_exercises.tsv -> Neck+Shoulder+Wrist, 60s -> prints 4-move plan and Preparing.",
+    "e2e_demo": "save neck+shoulder -> reload -> plan -> ShowBreak -> presentation -> Pause -> BreakTaken -> cleared (non-GUI)."
+  },
+  "git": {
+    "repository": "/home/user/workledge",
+    "commits_so_far": [
+      "4ffacc8f32f0553b8fc603d27d530734c0885ef1",
+      "68c9905e7504cf09f0324e9ec340aba327dead58",
+      "6ef0d38ec27221f727dc60e76cce6311ede44381",
+      "e598688d31b01f8969fccc5d380527d62005e4c8",
+      "b95db697bbfad8f11ca511f88f352ffc41e84d31"
+    ]
+  },
+  "notes": [
+    "workrave_adapter.* renamed to exercise_view_adapter.*: DTO-only, no Workrave type is included or created.",
+    "Real conversion is in integration/workrave_exercise_bridge.* and is UNVERIFIED.",
+    "WorkraveConfigStore is an UNVERIFIED declaration/implementation; tests cover only FileSettingsStore.",
+    "Stable config prefix is gui/break_exercise/, independent of the provisional display name."
+  ]
+}

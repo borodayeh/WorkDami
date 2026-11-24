@@ -1,0 +1,14 @@
+repository: https://github.com/rcaelers/workrave.git
+commit: e055e2ff0cb2cb68f60a86137048608459aec2cc
+ref: main
+version: 1.12.0-beta.1 (from vcpkg.json at that commit)
+license: GPL-3.0-or-later (COPYING at that commit)
+
+Pinning rule: the workflow fetches this exact commit with
+  git init upstream/workrave
+  git -C upstream/workrave fetch --depth 1 <repository> <commit>
+  git -C upstream/workrave checkout FETCH_HEAD
+
+Dynamic Ledge (https://github.com/shandilyaswagat/dynamic_ledge.git, 9c5dd4d)
+is a DESIGN REFERENCE ONLY. It is not fetched, linked, or packaged. Its
+GPL-3.0 license and attribution are recorded in THIRD_PARTY.md.

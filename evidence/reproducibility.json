@@ -1,0 +1,18 @@
+{
+  "checks_actually_run": [
+    "bash -n on scripts/*.sh: OK",
+    "python yaml.safe_load(.github/workflows/windows-qt.yml): OK",
+    "patch -p1 --dry-run of patches/workrave/0001-maksa-integration.patch against pinned sources: OK",
+    "git fetch --depth 1 of e055e2ff0cb2cb68f60a86137048608459aec2cc from upstream: OK",
+    "scripts/apply_integration.sh against freshly fetched source: OK; add_subdirectory(maksa) and MaksaHud.qml present",
+    "grep for /home/user in .github, scripts, patches, upstream, THIRD_PARTY.md, integration/README.md: none"
+  ],
+  "not_run": [
+    "GitHub Actions workflow",
+    "CMake configure/build on Windows or Linux",
+    "Qt/QML launch",
+    "application-level acceptance path",
+    "persistence via real IConfigurator"
+  ],
+  "upstream_pin": "e055e2ff0cb2cb68f60a86137048608459aec2cc"
+}

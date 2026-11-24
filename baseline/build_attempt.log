@@ -1,0 +1,7 @@
+$ cmake -S /home/user/workrave -B /home/user/workrave/build -DWITH_UI=Qt
+/bin/bash: line 5: cmake: command not found
+exit_code=127
+
+$ qmake6 -v
+/bin/bash: line 9: qmake6: command not found
+exit_code=127

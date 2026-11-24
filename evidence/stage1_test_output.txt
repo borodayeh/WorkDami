@@ -1,0 +1,43 @@
+== build core tests ==
+== build demo ==
+== run tests ==
+[PASS] catalog loads usable test fixtures
+[PASS] catalog records warnings instead of aborting
+[PASS] incomplete row is skipped
+[PASS] missing media is flagged but the record survives
+[PASS] unknown/unreviewed content is not approved by default
+[PASS] provisional display name lives in one central header
+[PASS] draft exercises never enter normal selection
+[PASS] planner fills the time with more than one movement
+[PASS] planner never exceeds available time
+[PASS] multiple selected body regions are combined
+[PASS] whole-body mode diversifies across regions
+[PASS] floor and equipment movements are excluded by default constraints
+[PASS] favourites cannot bypass equipment or position constraints
+[PASS] recently shown movements are deprioritised
+[PASS] a movement that does not fit is skipped, not shortened
+[PASS] hiding all candidates produces an explicit reason
+[PASS] session starts Idle
+[PASS] Start -> Preparing
+[PASS] Ready -> Playing
+[PASS] Pause -> Paused
+[PASS] Resume -> Playing
+[PASS] reopening the card does not create or reset a session
+[PASS] Next -> Transitioning
+[PASS] Ready advances the movement index
+[PASS] Skip advances to the next movement
+[PASS] Next on the last movement completes the session
+[PASS] illegal transitions are rejected
+[PASS] Cancel ends the session
+
+ALL TESTS PASSED
+== run demo ==
+Product (provisional): مکثا / Maksa
+Fixture file: /home/user/workledge/core/data/test_exercises.tsv
+Records loaded: 12 | warnings: 2
+Planned routine (51s):
+  1. رها کردن گردن (آزمایشی) [test_bad_media] 12s (transition 2s)
+  2. خم کردن گردن (آزمایشی) [test_neck_tilt] 12s (transition 2s)
+  3. چرخش شانه (آزمایشی) [test_shoulder_roll] 9s (transition 1s)
+  4. کشش مچ (آزمایشی) [test_wrist_stretch] 18s (transition 2s)
+Session state: Preparing
