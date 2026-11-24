@@ -27,7 +27,7 @@
  #include "QmlPrefsDialog.hh"
  #include "QmlStatisticsDialog.hh"
  #include "StatusIcon.hh"
-+#include "MaksaBridge.hh"
++#include "MaksaBridge.h"
  
  #include "core/CoreTypes.hh"
  #include "ui/GUIConfig.hh"
@@ -45,7 +45,7 @@
  #endif
  
  #include "Toolkit.hh"
-+#include "MaksaBridge.hh"
++#include "MaksaBridge.h"
  
  #include <QApplication>
  #include <QDir>
@@ -90,7 +90,7 @@
          <file>PrefTokens.qml</file>
 --- a/maksa/CMakeLists.txt
 +++ b/maksa/CMakeLists.txt
-@@ -0,0 +1,30 @@
+@@ -0,0 +1,32 @@
 +# Added by the Maksa integration patch. Requires WITH_UI=Qt.
 +add_library(maksa_core STATIC
 +  core/exercise_catalog.cc
@@ -119,12 +119,17 @@
 +    Qt6::Qml
 +    Qt6::Quick
 +  PRIVATE
-+    workrave-libs-commonui)
++    workrave-libs-commonui
++    # workrave-app exports ui/app/include, owner of ui/IApplicationContext.hh.
++    workrave-app)
 +set_target_properties(maksa_bridge PROPERTIES AUTOMOC ON)
 --- a/maksa/integration/MaksaBridge.cc
 +++ b/maksa/integration/MaksaBridge.cc
-@@ -0,0 +1,108 @@
+@@ -0,0 +1,111 @@
 +#include "MaksaBridge.h"
++
++// Full definition needed: the constructor calls app->get_configurator().
++#include "ui/IApplicationContext.hh"
 +
 +#include <QCoreApplication>
 +#include <QDir>
@@ -234,7 +239,7 @@
 +}
 --- a/maksa/integration/MaksaBridge.h
 +++ b/maksa/integration/MaksaBridge.h
-@@ -0,0 +1,52 @@
+@@ -0,0 +1,55 @@
 +#pragma once
 +
 +// UNVERIFIED minimal bridge added by the integration patch.
@@ -250,6 +255,9 @@
 +#include "settings.h"
 +#include "workrave_config_store.h"
 +
++// Global namespace, as in upstream ui/IApplicationContext.hh. Only the
++// shared_ptr signature is needed here; the .cc includes the full interface.
++class IApplicationContext;
 +class QQuickView;
 +
 +class MaksaBridge : public QObject
