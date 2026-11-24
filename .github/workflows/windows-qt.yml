@@ -23,12 +23,59 @@ jobs:
           update: true
           install: git
 
-      - name: Install pinned CLANG64 dependencies
+      # Diagnose before installing. No package name, version or architecture is
+      # changed here; this only records what pacman can actually see on the runner.
+      - name: Diagnose MSYS2 package database
         shell: msys2 {0}
         run: |
           set -o pipefail
           mkdir -p _logs
-          pacman -S --noconfirm --needed $(cat scripts/msys2_deps.txt) 2>&1 | tee _logs/00-pacman.log
+          {
+            echo "MSYSTEM=${MSYSTEM:-unset}"
+            echo "pacman=$(command -v pacman || echo MISSING)"
+            echo "--- repositories ---"
+            pacman-conf --repo-list 2>&1 || echo "pacman-conf unavailable"
+            echo "--- dependency file (first 80 lines, escaped) ---"
+            sed -n '1,80l' scripts/msys2_deps.txt
+            echo "--- sample package query ---"
+            pacman -Si git mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-qt6-base 2>&1 || true
+          } 2>&1 | tee _logs/00-msys2-diagnostics.log
+
+      # Preserve the MSYS2 diagnostics even if a later step fails.
+      - name: Upload MSYS2 diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maksa-msys2-diagnostics-${{ github.run_number }}
+          path: _logs/00-*.log
+          if-no-files-found: warn
+
+      - name: Install pinned CLANG64 dependencies
+        shell: msys2 {0}
+        run: |
+          set -euo pipefail
+          mkdir -p _logs
+
+          # Read the list as a bash array: tolerate CRLF, blank lines and comments.
+          # Never pass an unquoted word-split string to pacman.
+          mapfile -t PACKAGES < <(sed -e 's/\r$//' -e '/^[[:space:]]*#/d' -e '/^[[:space:]]*$/d' scripts/msys2_deps.txt)
+          [ "${#PACKAGES[@]}" -gt 0 ] || { echo "empty dependency list" >&2; exit 1; }
+          printf 'package_count=%s\n' "${#PACKAGES[@]}" | tee _logs/00-package-targets.log
+          printf '%s\n' "${PACKAGES[@]}" | tee -a _logs/00-package-targets.log
+
+          # setup-msys2 already ran with update: true. Do not refresh or alter
+          # repositories here: record the real lookup failure and stop instead.
+          if ! pacman -Si \
+            git \
+            mingw-w64-clang-x86_64-clang \
+            mingw-w64-clang-x86_64-qt6-base \
+            > _logs/00-package-probe.log 2>&1; then
+            cat _logs/00-package-probe.log
+            echo "Package lookup failed after MSYS2 setup; inspect diagnostics." >&2
+            exit 1
+          fi
+
+          pacman -S --noconfirm --needed "${PACKAGES[@]}" 2>&1 | tee -a _logs/00-pacman.log
 
       - name: Record versions and pins
         shell: msys2 {0}
