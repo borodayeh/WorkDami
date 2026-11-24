@@ -90,7 +90,7 @@
          <file>PrefTokens.qml</file>
 --- a/maksa/CMakeLists.txt
 +++ b/maksa/CMakeLists.txt
-@@ -0,0 +1,26 @@
+@@ -0,0 +1,30 @@
 +# Added by the Maksa integration patch. Requires WITH_UI=Qt.
 +add_library(maksa_core STATIC
 +  core/exercise_catalog.cc
@@ -108,14 +108,18 @@
 +  integration/MaksaBridge.cc)
 +target_include_directories(maksa_bridge PUBLIC
 +  ${CMAKE_CURRENT_SOURCE_DIR}/core
-+  ${CMAKE_CURRENT_SOURCE_DIR}/integration
-+  ${CMAKE_SOURCE_DIR}/ui/libs/commonui/include
-+  ${CMAKE_SOURCE_DIR}/libs/config/include)
-+target_link_libraries(maksa_bridge PUBLIC
-+  maksa_core
-+  Qt6::Core
-+  Qt6::Qml
-+  Qt6::Quick)
++  ${CMAKE_CURRENT_SOURCE_DIR}/integration)
++# Do not add Workrave include paths by hand. Link the owning targets so their
++# PUBLIC usage requirements (include dirs, definitions and link deps) propagate.
++target_link_libraries(maksa_bridge
++  PUBLIC
++    maksa_core
++    workrave-libs-config
++    Qt6::Core
++    Qt6::Qml
++    Qt6::Quick
++  PRIVATE
++    workrave-libs-commonui)
 +set_target_properties(maksa_bridge PROPERTIES AUTOMOC ON)
 --- a/maksa/integration/MaksaBridge.cc
 +++ b/maksa/integration/MaksaBridge.cc
