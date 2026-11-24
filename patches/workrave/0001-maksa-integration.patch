@@ -10,14 +10,12 @@
  #----------------------------------------------------------------------------------------------------
 --- a/ui/app/CMakeLists.txt
 +++ b/ui/app/CMakeLists.txt
-@@ -326,6 +326,10 @@
+@@ -326,6 +326,8 @@
    target_link_libraries(workrave PRIVATE workrave-toolkit-qt)
    target_sources(workrave PRIVATE $<TARGET_OBJECTS:workrave-toolkit-qt>)
  endif()
-+target_include_directories(workrave PRIVATE
-+  ${CMAKE_SOURCE_DIR}/maksa/core
-+  ${CMAKE_SOURCE_DIR}/maksa/integration)
-+target_link_libraries(workrave PRIVATE maksa_bridge)
++# Toolkit.hh includes MaksaBridge.h, so the toolkit must own this dependency.
++target_link_libraries(workrave-toolkit-qt PRIVATE maksa_bridge)
  
  If (PLATFORM_OS_WINDOWS)
    set(WR_VERSION ${WORKRAVE_VERSION})
@@ -90,7 +88,7 @@
          <file>PrefTokens.qml</file>
 --- a/maksa/CMakeLists.txt
 +++ b/maksa/CMakeLists.txt
-@@ -0,0 +1,32 @@
+@@ -0,0 +1,33 @@
 +# Added by the Maksa integration patch. Requires WITH_UI=Qt.
 +add_library(maksa_core STATIC
 +  core/exercise_catalog.cc
@@ -106,9 +104,10 @@
 +  integration/workrave_config_store.cc
 +  integration/MaksaBridge.h
 +  integration/MaksaBridge.cc)
-+target_include_directories(maksa_bridge PUBLIC
-+  ${CMAKE_CURRENT_SOURCE_DIR}/core
-+  ${CMAKE_CURRENT_SOURCE_DIR}/integration)
++target_include_directories(maksa_bridge
++  PUBLIC
++    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/core>
++    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/integration>)
 +# Do not add Workrave include paths by hand. Link the owning targets so their
 +# PUBLIC usage requirements (include dirs, definitions and link deps) propagate.
 +target_link_libraries(maksa_bridge
