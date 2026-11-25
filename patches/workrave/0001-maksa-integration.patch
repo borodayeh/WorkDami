@@ -84,7 +84,7 @@
    workrave-libs-audio
 --- a/maksa/CMakeLists.txt
 +++ b/maksa/CMakeLists.txt
-@@ -0,0 +1,33 @@
+@@ -0,0 +1,35 @@
 +# Added by the Maksa integration patch. Requires WITH_UI=Qt.
 +add_library(maksa_core STATIC
 +  core/exercise_catalog.cc
@@ -116,7 +116,9 @@
 +  PRIVATE
 +    workrave-libs-commonui
 +    # workrave-app exports ui/app/include, owner of ui/IApplicationContext.hh.
-+    workrave-app)
++    workrave-app
++    # ui/SoundTheme.hh pulls in audio/ISoundPlayer.hh via IApplicationContext.hh.
++    workrave-libs-audio)
 +set_target_properties(maksa_bridge PROPERTIES AUTOMOC ON)
 --- a/maksa/integration/MaksaBridge.cc
 +++ b/maksa/integration/MaksaBridge.cc
